@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  //output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  CANDIDATE
+  RECRUITER
+}
+
+enum ExperienceLevel {
+  FRESHER
+  JUNIOR
+  MID_LEVEL
+  SENIOR
+  LEAD
+}
+
+enum CompanySize {
+  STARTUP
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+// ==============================
+// USER
+// ==============================
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+
+  role Role
+
+  emailVerified Boolean @default(false)
+  image         String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  candidate CandidateProfile?
+  recruiter RecruiterProfile?
+
+  // notifications Notification[]
+
+  // auditLogs     AuditLog[]
+
+  @@index([role])
+  @@index([deletedAt])
+}
+
+// ==============================
+// CANDIDATE PROFILE
+// ==============================
+
+model CandidateProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  headline String?
+  bio      String? @db.Text
+
+  phone   String?
+  city    String?
+  state   String?
+  country String?
+
+  linkedinUrl  String?
+  githubUrl    String?
+  portfolioUrl String?
+
+  experienceLevel ExperienceLevel @default(FRESHER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([experienceLevel])
+}
+
+// ==============================
+// COMPANY
+// ==============================
+
+model Company {
+  id String @id @default(cuid())
+
+  name String
+  slug String @unique
+
+  website String?
+  logo    String?
+
+  description String? @db.Text
+
+  industry String?
+
+  companySize CompanySize?
+
+  city    String?
+  state   String?
+  country String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  recruiter RecruiterProfile?
+
+  @@index([name])
+  @@index([slug])
+}
+
+// ==============================
+// RECRUITER PROFILE
+// ==============================
+
+model RecruiterProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  companyId String  @unique
+  company   Company @relation(fields: [companyId], references: [id])
+
+  designation String?
+
+  phone String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+// ==============================
+// SKILL MASTER
+// ==============================
+
+model SkillMaster {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  category String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
