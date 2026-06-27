@@ -29,6 +29,7 @@ import {
   MapPin,
   Link as LinkIcon,
 } from "lucide-react";
+import EducationCandidate from "./EducationCandidate";
 
 function CandidateResumeClient() {
 
@@ -235,7 +236,7 @@ function CandidateResumeClient() {
         </TabsContent>
 
         <TabsContent value="sections">
-          <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+          {/* <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
             <CardHeader>
               <CardTitle>Resume Sections</CardTitle>
               <CardDescription className="text-slate-300">
@@ -249,7 +250,8 @@ function CandidateResumeClient() {
               <SectionCard icon={<Sparkles />} title="Certifications" desc="Issuer, issue date, credential" />
               <SectionCard icon={<BrainCircuit />} title="Skills" desc="Skill master and proficiency" />
             </CardContent>
-          </Card>
+          </Card> */}
+          <EducationCandidate/>
         </TabsContent>
 
         <TabsContent value="preview">

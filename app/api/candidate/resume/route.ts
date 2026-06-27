@@ -4,60 +4,57 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
 
-    try {
-        const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-        if(!session?.user?.id){
-            return NextResponse.json({message:"Unauthorized"},{status:401})
-        };
+    const candidate = await db.candidateProfile.findUnique({
+      where: {
+        userId: session.user.id,
+      },
 
-        const candidate = await db?.candidateProfile?.findUnique({
-            where:{
-                userId:session.user.id,
-            },
+      include: {
+        resume: true,
+        educations: {
+          orderBy: { createdAt: "desc" },
+        },
+        experiences: {
+          orderBy: { createdAt: "desc" },
+        },
+        projects: {
+          orderBy: { createdAt: "desc" },
+        },
+        certifications: {
+          orderBy: { createdAt: "desc" },
+        },
+        candidateSkills: {
+          include: {
+            skill: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
 
-            include:{
-                resume:true,
-                educations:{
-                    orderBy:{createdAt:"desc"}
-                },
-                experiences:{
-                    orderBy:{createdAt:"desc"}
-                },
-                projects:{
-                     orderBy:{createdAt:"desc"}
-                },
-                 certifications:{
-                     orderBy:{createdAt:"desc"}
-                },
-                candidateSkill:{
-                    include:{
-                        skill:true
-                    },
-                    orderBy:{createdAt:"desc"}
-                },
-            },
-        });
-
-        if(!candidate){
-            return NextResponse.json(
+    if (!candidate) {
+      return NextResponse.json(
         { message: "Candidate profile not found" },
-        { status: 404 }
+        { status: 404 },
       );
-        }
+    }
 
-        return NextResponse.json({ candidate });
-    } catch (error) {
-        console.error("GET_CANDIDATE_RESUME_ERROR:", error);
+    return NextResponse.json({ candidate });
+  } catch (error) {
+    console.error("GET_CANDIDATE_RESUME_ERROR:", error);
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
-    }
-    
-};
-
+  }
+}
 
 export async function PATCH(request: Request) {
   try {
@@ -123,7 +120,7 @@ export async function PATCH(request: Request) {
     console.error("PATCH_CANDIDATE_RESUME_ERROR:", error);
     return NextResponse.json(
       { message: "Failed to update candidate resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
