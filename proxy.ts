@@ -1,44 +1,66 @@
-import { NextResponse } from "next/server";
-import { auth } from "./lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default auth((req: {
-    nextUrl: any; auth: any 
-}) => {
-    const session = req.auth;
-    const path = req.nextUrl.pathname;
+const PUBLIC_PATHS = ["/", "/signin", "/register", "/api/auth"];
 
-    const isLoggedIn = !!session?.user;
-    const role = session?.user?.role;
+export async function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-
-     const isAuthPage = path.startsWith("/login") || path.startsWith("/register");
-  const isCandidateRoute = path.startsWith("/candidate");
-  const isRecruiterRoute = path.startsWith("/recruiter");
-  const isAdminRoute = path.startsWith("/admin");
-
-  if (isAuthPage && isLoggedIn) {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
+  if (
+    PUBLIC_PATHS.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`),
+    )
+  ) {
+    return NextResponse.next();
   }
 
-  if ((isCandidateRoute || isRecruiterRoute || isAdminRoute) && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
+  if (pathname.startsWith("/_next") || pathname.includes(".")) {
+    return NextResponse.next();
   }
 
-  if (isCandidateRoute && role !== "CANDIDATE") {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
+  const isProtected =
+    pathname.startsWith("/candidate") ||
+    pathname.startsWith("/recruiter") ||
+    pathname.startsWith("/admin");
+
+  if (!isProtected) {
+    return NextResponse.next();
   }
 
-  if (isRecruiterRoute && role !== "RECRUITER") {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+  });
+
+  if (!token) {
+    const signInUrl = new URL("/signin", req.url);
+    signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    return NextResponse.redirect(signInUrl);
   }
 
-  if (isAdminRoute && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
+  const role = token.role as string | undefined;
+
+  if (pathname.startsWith("/candidate") && role !== "CANDIDATE") {
+    return NextResponse.redirect(new URL("/unauthorized", req.url));
+  }
+
+  if (pathname.startsWith("/recruiter") && role !== "RECRUITER") {
+    return NextResponse.redirect(new URL("/unauthorized", req.url));
+  }
+
+  if (pathname.startsWith("/admin") && role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
-  matcher: ["/login", "/register", "/candidate/:path*", "/recruiter/:path*", "/admin/:path*"],
+  matcher: [
+    "/candidate/:path*",
+    "/recruiter/:path*",
+    "/admin/:path*",
+    "/signin",
+    "/register",
+  ],
 };
