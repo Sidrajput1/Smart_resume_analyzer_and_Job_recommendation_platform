@@ -29,17 +29,18 @@ import {
   MapPin,
   Link as LinkIcon,
 } from "lucide-react";
+import { Upload, FileUp, Download } from "lucide-react";
 import EducationCandidate from "./EducationCandidate";
+import { useUploadResumeFile } from "@/hooks/useUploadResumeFile";
 
 function CandidateResumeClient() {
+  const { data, isLoading } = useCandidateResume();
+  const updateMutation = useUpdateCandidateResume();
 
-    const {data,isLoading} = useCandidateResume();
-    const updateMutation = useUpdateCandidateResume();
+  const candidate = data?.candidate;
+  const resume = candidate?.resume;
 
-    const candidate = data?.candidate;
-    const resume = candidate?.resume;
-
-    const [headline, setHeadline] = useState("");
+  const [headline, setHeadline] = useState("");
   const [bio, setBio] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
@@ -51,8 +52,12 @@ function CandidateResumeClient() {
   const [resumeTitle, setResumeTitle] = useState("");
   const [resumeSummary, setResumeSummary] = useState("");
 
+  // state for resume upload
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+
+  const uploadMutation = useUploadResumeFile();
   useEffect(() => {
-    if(!candidate) return;
+    if (!candidate) return;
 
     setHeadline(candidate.headline ?? "");
     setBio(candidate.bio ?? "");
@@ -65,14 +70,13 @@ function CandidateResumeClient() {
     setPortfolioUrl(candidate.portfolioUrl ?? "");
     setResumeTitle(resume?.title ?? "");
     setResumeSummary(resume?.summary ?? "");
-  },[candidate,resume])
+  }, [candidate, resume]);
 
+  async function handleSaveProfile(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-  async function handleSaveProfile(e: React.FormEvent<HTMLFormElement>){
-        e.preventDefault();
-
-        await updateMutation.mutateAsync({
-             headline,
+    await updateMutation.mutateAsync({
+      headline,
       bio,
       phone,
       city,
@@ -83,11 +87,23 @@ function CandidateResumeClient() {
       portfolioUrl,
       resumeTitle,
       resumeSummary,
-        });
-  };
+    });
+  }
 
-  if(isLoading){
-    return <ResumeSkeleton/>
+  async function handleUploadResume() {
+    if (!resumeFile) return;
+
+    await uploadMutation.mutateAsync({
+      file: resumeFile,
+      title: resumeTitle || "My Resume",
+      summary: resumeSummary || "",
+    });
+
+    setResumeFile(null);
+  }
+
+  if (isLoading) {
+    return <ResumeSkeleton />;
   }
   return (
     <div className="space-y-6">
@@ -131,14 +147,54 @@ function CandidateResumeClient() {
             <CardContent>
               <form onSubmit={handleSaveProfile} className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Headline" value={headline} onChange={setHeadline} placeholder="Full Stack Developer" />
-                  <Field label="Phone" value={phone} onChange={setPhone} placeholder="9876543210" />
-                  <Field label="City" value={city} onChange={setCity} placeholder="Patna" />
-                  <Field label="State" value={state} onChange={setState} placeholder="Bihar" />
-                  <Field label="Country" value={country} onChange={setCountry} placeholder="India" />
-                  <Field label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
-                  <Field label="GitHub URL" value={githubUrl} onChange={setGithubUrl} placeholder="https://github.com/..." />
-                  <Field label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} placeholder="https://..." />
+                  <Field
+                    label="Headline"
+                    value={headline}
+                    onChange={setHeadline}
+                    placeholder="Full Stack Developer"
+                  />
+                  <Field
+                    label="Phone"
+                    value={phone}
+                    onChange={setPhone}
+                    placeholder="9876543210"
+                  />
+                  <Field
+                    label="City"
+                    value={city}
+                    onChange={setCity}
+                    placeholder="Patna"
+                  />
+                  <Field
+                    label="State"
+                    value={state}
+                    onChange={setState}
+                    placeholder="Bihar"
+                  />
+                  <Field
+                    label="Country"
+                    value={country}
+                    onChange={setCountry}
+                    placeholder="India"
+                  />
+                  <Field
+                    label="LinkedIn URL"
+                    value={linkedinUrl}
+                    onChange={setLinkedinUrl}
+                    placeholder="https://linkedin.com/in/..."
+                  />
+                  <Field
+                    label="GitHub URL"
+                    value={githubUrl}
+                    onChange={setGithubUrl}
+                    placeholder="https://github.com/..."
+                  />
+                  <Field
+                    label="Portfolio URL"
+                    value={portfolioUrl}
+                    onChange={setPortfolioUrl}
+                    placeholder="https://..."
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -166,7 +222,7 @@ function CandidateResumeClient() {
         </TabsContent>
 
         <TabsContent value="resume">
-          <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+          {/* <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
             <CardHeader>
               <CardTitle>Resume Details</CardTitle>
               <CardDescription className="text-slate-300">
@@ -232,7 +288,69 @@ function CandidateResumeClient() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
+          <div className="mb-6 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div className="space-y-2">
+                <p className="text-lg font-semibold">Resume File Upload</p>
+                <p className="text-sm text-slate-300">
+                  Upload your main resume in PDF or DOCX format. Max size: 5MB.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <Input
+                  type="file"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                  className="border-white/10 bg-white/10 text-white file:border-0 file:bg-indigo-500 file:text-white"
+                />
+
+                <Button
+                  type="button"
+                  onClick={handleUploadResume}
+                  disabled={!resumeFile || uploadMutation.isPending}
+                  className="bg-indigo-500 text-white hover:bg-indigo-400"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {uploadMutation.isPending ? "Uploading..." : "Upload Resume"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-slate-950/40 p-4">
+              {resume?.fileUrl ? (
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="font-medium text-white">
+                      {resume.fileName || "Uploaded Resume"}
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      {resume.mimeType || "Unknown type"} •{" "}
+                      {resume.fileSize
+                        ? `${Math.round(resume.fileSize / 1024)} KB`
+                        : "Size unknown"}
+                    </p>
+                  </div>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-white/10 bg-white/5 hover:bg-white/10"
+                  >
+                    <a href={resume.fileUrl} target="_blank" rel="noreferrer">
+                      <Download className="mr-2 h-4 w-4" />
+                      Open File
+                    </a>
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-sm text-slate-400">
+                  No resume uploaded yet. Upload your file to begin AI parsing
+                  later.
+                </div>
+              )}
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="sections">
@@ -251,7 +369,7 @@ function CandidateResumeClient() {
               <SectionCard icon={<BrainCircuit />} title="Skills" desc="Skill master and proficiency" />
             </CardContent>
           </Card> */}
-          <EducationCandidate/>
+          <EducationCandidate />
         </TabsContent>
 
         <TabsContent value="preview">
@@ -259,7 +377,8 @@ function CandidateResumeClient() {
             <CardHeader>
               <CardTitle>Candidate Intelligence Preview</CardTitle>
               <CardDescription className="text-slate-300">
-                This will become your AI-powered profile after parsing and analysis.
+                This will become your AI-powered profile after parsing and
+                analysis.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -282,7 +401,8 @@ function CandidateResumeClient() {
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <p className="mb-2 text-sm text-slate-400">Suggestions</p>
                   <p className="text-sm text-slate-200">
-                    Add measurable achievements, keywords, and stronger project details.
+                    Add measurable achievements, keywords, and stronger project
+                    details.
                   </p>
                 </div>
               </div>
@@ -291,8 +411,8 @@ function CandidateResumeClient() {
         </TabsContent>
       </Tabs>
     </div>
-  )
-};
+  );
+}
 
 function Field({
   label,
