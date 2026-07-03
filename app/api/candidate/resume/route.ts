@@ -13,11 +13,12 @@ export async function GET() {
 
     const candidate = await db.candidateProfile.findUnique({
       where: {
-        userId: session.user.id,
+        userId: session?.user?.id,
       },
-
+      // include related data in the response
       include: {
         resume: true,
+        intelligence:true,
         educations: {
           orderBy: { createdAt: "desc" },
         },
@@ -66,9 +67,10 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
 
+    // update candidate profile with the provided data
     const candidate = await db.candidateProfile.update({
       where: {
-        userId: session.user.id,
+        userId: session?.user?.id,
       },
       data: {
         headline: body.headline ?? null,
@@ -83,6 +85,7 @@ export async function PATCH(request: Request) {
         experienceLevel: body.experienceLevel ?? undefined,
         resume: body.resumeTitle
           ? {
+            // if resumeTitle is provided , upsert (update or insert) the resume with the provided title and summary
               upsert: {
                 create: {
                   title: body.resumeTitle,
@@ -90,6 +93,7 @@ export async function PATCH(request: Request) {
                   status: "DRAFT",
                   visibility: "PRIVATE",
                 },
+                // if resume already exists, update the title and summary
                 update: {
                   title: body.resumeTitle,
                   summary: body.resumeSummary ?? null,
@@ -98,6 +102,7 @@ export async function PATCH(request: Request) {
             }
           : undefined,
       },
+      // include related data in the response
       include: {
         resume: true,
         educations: true,

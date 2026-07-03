@@ -32,14 +32,18 @@ import {
 import { Upload, FileUp, Download } from "lucide-react";
 import EducationCandidate from "./EducationCandidate";
 import { useUploadResumeFile } from "@/hooks/useUploadResumeFile";
+import { useGenerateCandidateIntelligence } from "@/hooks/useGeneralCandidateIntelligence";
 
 function CandidateResumeClient() {
   const { data, isLoading } = useCandidateResume();
   const updateMutation = useUpdateCandidateResume();
+  const generalIntelligenceMutation = useGenerateCandidateIntelligence();
 
   const candidate = data?.candidate;
   const resume = candidate?.resume;
 
+  const intelligence = candidate?.intelligence;
+  
   const [headline, setHeadline] = useState("");
   const [bio, setBio] = useState("");
   const [phone, setPhone] = useState("");
@@ -373,42 +377,107 @@ function CandidateResumeClient() {
         </TabsContent>
 
         <TabsContent value="preview">
-          <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
-            <CardHeader>
-              <CardTitle>Candidate Intelligence Preview</CardTitle>
-              <CardDescription className="text-slate-300">
-                This will become your AI-powered profile after parsing and
-                analysis.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <PreviewStat label="Overall Score" value="--" />
-                <PreviewStat label="ATS Score" value="--" />
-                <PreviewStat label="Skill Gaps" value="--" />
-                <PreviewStat label="Recommended Roles" value="--" />
-              </div>
+  <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+    <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div>
+        <CardTitle>Candidate Intelligence Profile</CardTitle>
+        <CardDescription className="text-slate-300">
+          AI-generated analysis of your resume and career profile.
+        </CardDescription>
+      </div>
 
-              <Separator className="bg-white/10" />
+      <Button
+        type="button"
+        onClick={() => generalIntelligenceMutation.mutate()}
+        disabled={!resume?.fileUrl || generalIntelligenceMutation.isPending}
+        className="bg-indigo-500 text-white hover:bg-indigo-400"
+      >
+        {generalIntelligenceMutation.isPending
+          ? "Generating..."
+          : intelligence
+          ? "Regenerate Intelligence"
+          : "Generate Intelligence"}
+      </Button>
+    </CardHeader>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="mb-2 text-sm text-slate-400">Strengths</p>
-                  <p className="text-sm text-slate-200">
-                    Will be populated by the AI engine after resume parsing.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="mb-2 text-sm text-slate-400">Suggestions</p>
-                  <p className="text-sm text-slate-200">
-                    Add measurable achievements, keywords, and stronger project
-                    details.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+    <CardContent className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <PreviewStat
+          label="Overall Score"
+          value={intelligence ? String(intelligence.overallScore) : "--"}
+        />
+        <PreviewStat
+          label="ATS Score"
+          value={intelligence ? String(intelligence.atsScore) : "--"}
+        />
+        <PreviewStat
+          label="Skill Score"
+          value={intelligence ? String(intelligence.skillScore) : "--"}
+        />
+        <PreviewStat
+          label="Experience Score"
+          value={intelligence ? String(intelligence.experienceScore) : "--"}
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <PreviewStat
+          label="Education Score"
+          value={intelligence ? String(intelligence.educationScore) : "--"}
+        />
+        <PreviewStat
+          label="Project Score"
+          value={intelligence ? String(intelligence.projectScore) : "--"}
+        />
+      </div>
+
+      <Separator className="bg-white/10" />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ListPanel
+          title="Strengths"
+          items={intelligence?.strengths ?? []}
+          emptyText="Generate the profile to see strengths."
+          variant="green"
+        />
+        <ListPanel
+          title="Weaknesses"
+          items={intelligence?.weaknesses ?? []}
+          emptyText="Generate the profile to see weaknesses."
+          variant="red"
+        />
+        <ListPanel
+          title="Recommended Roles"
+          items={intelligence?.recommendedRoles ?? []}
+          emptyText="Generate the profile to see recommended roles."
+          variant="blue"
+        />
+        <ListPanel
+          title="Skill Gaps"
+          items={intelligence?.skillGaps ?? []}
+          emptyText="This will become more accurate after job matching."
+          variant="amber"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <p className="mb-2 text-sm font-medium text-slate-200">AI Summary</p>
+        <p className="text-sm text-slate-300">
+          {intelligence?.summary ||
+            "Generate the Candidate Intelligence Profile to see your AI summary."}
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <p className="mb-2 text-sm font-medium text-slate-200">Suggestions</p>
+        <p className="whitespace-pre-line text-sm text-slate-300">
+          {intelligence?.suggestions ||
+            "Add resume data and generate the profile to get improvement suggestions."}
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+</TabsContent>
       </Tabs>
     </div>
   );
@@ -436,7 +505,7 @@ function Field({
       />
     </div>
   );
-}
+};
 
 function MetricCard({
   icon,
@@ -461,7 +530,7 @@ function MetricCard({
       </CardContent>
     </Card>
   );
-}
+};
 
 function SectionCard({
   icon,
@@ -479,7 +548,7 @@ function SectionCard({
       <p className="mt-1 text-sm text-slate-400">{desc}</p>
     </div>
   );
-}
+};
 
 function PreviewStat({ label, value }: { label: string; value: string }) {
   return (
@@ -488,7 +557,7 @@ function PreviewStat({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-2xl font-bold">{value}</p>
     </div>
   );
-}
+};
 
 function ResumeSkeleton() {
   return (
@@ -498,6 +567,39 @@ function ResumeSkeleton() {
       <Skeleton className="h-80 w-full rounded-3xl bg-white/10" />
     </div>
   );
+};
+
+function ListPanel({
+  title,items,emptyText,variant,
+}:{
+  title: string;
+  items: string[];
+  emptyText: string;
+  variant: "green" | "red" | "blue" | "amber";
+}){
+  const styles = {
+    green: "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/20",
+    red: "bg-rose-500/20 text-rose-200 hover:bg-rose-500/20",
+    blue: "bg-cyan-500/20 text-cyan-200 hover:bg-cyan-500/20",
+    amber: "bg-amber-500/20 text-amber-200 hover:bg-amber-500/20",
+  } as const;
+
+  return(
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <p className="mb-3 text-sm font-medium text-slate-200">{title}</p>
+      {items.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {items.map((item) => (
+            <Badge key={item} className={styles[variant]}>
+              {item}
+            </Badge>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-slate-400">{emptyText}</p>
+      )}
+    </div>
+  )
 }
 
 export default CandidateResumeClient;

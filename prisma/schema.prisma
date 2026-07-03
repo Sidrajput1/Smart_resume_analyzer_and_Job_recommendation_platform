@@ -185,11 +185,12 @@ model CandidateProfile {
   certifications  Certification[]
   candidateSkills CandidateSkill[]
 
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
-  jobApplications        JobApplication[]
-  jobRecommendations     JobRecommendation[]
-  candidateIntelligences CandidateIntelligence[]
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  jobApplications    JobApplication[]
+  jobRecommendations JobRecommendation[]
+  //candidateIntelligences CandidateIntelligence[]
+  intelligence       CandidateIntelligence? @relation("CandidateProfileIntelligence")
 
   @@index([city])
   @@index([experienceLevel])
@@ -295,11 +296,13 @@ model Resume {
   parsedAt  DateTime?
   deletedAt DateTime?
 
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
-  jobApplications        JobApplication[]
-  jobRecommendations     JobRecommendation[]
-  candidateIntelligences CandidateIntelligence[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  jobApplications    JobApplication[]
+  jobRecommendations JobRecommendation[]
+  //candidateIntelligences CandidateIntelligence[]
+
+  intelligence CandidateIntelligence? @relation("ResumeIntelligence")
 
   @@index([candidateProfileId])
   @@index([status])
@@ -595,10 +598,12 @@ model CandidateIntelligence {
   id String @id @default(cuid())
 
   candidateProfileId String           @unique
-  candidateProfile   CandidateProfile @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
+  // candidateProfile   CandidateProfile @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
+  candidateProfile   CandidateProfile @relation("CandidateProfileIntelligence", fields: [candidateProfileId], references: [id], onDelete: Cascade)
 
   resumeId String @unique
-  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  //resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  resume   Resume @relation("ResumeIntelligence", fields: [resumeId], references: [id], onDelete: Cascade)
 
   overallScore    Float
   atsScore        Float

@@ -40,6 +40,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: "Dashboard", href: "/candidate", icon: <Home className="h-4 w-4" /> },
     { label: "Resume", href: "/candidate/resume", icon: <FileText className="h-4 w-4" /> },
     { label: "Jobs", href: "/candidate/jobs", icon: <BriefcaseBusiness className="h-4 w-4" /> },
+    { label: "Applications", href: "/candidate/applications-tracking", icon: <BriefcaseBusiness className="h-4 w-4" /> },
     { label: "Profile", href: "/candidate/profile", icon: <CircleUserRound className="h-4 w-4" /> },
   ],
   RECRUITER: [

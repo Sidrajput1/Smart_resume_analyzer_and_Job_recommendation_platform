@@ -31,11 +31,13 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-
+    
+    // validate form data 
     const file = formData.get("file");
     const title = String(formData.get("title") || "My Resume");
     const summary = String(formData.get("summary") || "");
 
+    // check if file is present and is of type File
     if (!(file instanceof File)) {
       return NextResponse.json(
         { message: "File is required" },
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // only allow PDF and DOCX files
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
         { message: "Only PDF and DOCX files are allowed" },
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-
+    // find candidate profile for the user
     const candidate = await db.candidateProfile.findUnique({
       where: { userId: session.user.id },
       select: {
@@ -75,6 +78,7 @@ export async function POST(request: Request) {
     const uploadDir = path.join(process.cwd(), "public", "uploads", "resumes");
     await mkdir(uploadDir, { recursive: true });
 
+    //generate unique file name  and save file
     const safeName = sanitizeFileName(file.name);
     const storedFileName = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
     const filePath = path.join(uploadDir, storedFileName);

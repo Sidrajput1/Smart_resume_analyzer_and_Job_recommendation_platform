@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // adding recruiter registration
+    // adding recruiter registration with company creation and recruiter profile creation in a single transaction to ensure data integrity
 
     const result = await db.$transaction(async (tx) => {
       const slug = await generateUniqueSlug(tx, data.companyName);
