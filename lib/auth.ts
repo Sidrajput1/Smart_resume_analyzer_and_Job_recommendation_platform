@@ -44,6 +44,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    // inject the user id and role into the JWT token and session object
     async jwt({ token, user }) {
       if (user) {
         token.id = (user as any).id;

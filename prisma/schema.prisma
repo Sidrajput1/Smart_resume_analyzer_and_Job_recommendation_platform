@@ -123,6 +123,26 @@ enum AuditActionType {
   RECOMMENDATION_GENERATED
 }
 
+enum ApplicationEventType {
+  APPLICATION_SUBMITTED
+  APPLICATION_VIEWED
+  STATUS_CHANGED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_CANCELLED
+}
+
+enum InterviewMode {
+  VIDEO
+  PHONE
+  ONSITE
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
 // ==============================
 // USER
 // ==============================
@@ -146,6 +166,8 @@ model User {
   recruiter RecruiterProfile?
 
   notifications Notification[]
+  applicationEvents ApplicationEvent[]
+createdInterviews Interview[]
 
   auditLogs AuditLog[]
   jobs      Job[]
@@ -259,12 +281,9 @@ model RecruiterProfile {
 // ==============================
 
 model SkillMaster {
-  id String @id @default(cuid())
-
-  name String @unique
-
-  category String?
-
+  id              String           @id @default(cuid())
+  name            String           @unique
+  category        String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   candidateSkills CandidateSkill[]
@@ -545,6 +564,9 @@ model JobApplication {
   respondedAt DateTime?
   deletedAt   DateTime?
 
+  events ApplicationEvent[]
+  interviews Interview[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -686,4 +708,56 @@ model AuditLog {
   @@index([action])
   @@index([entityType])
   @@index([entityId])
+}
+
+model ApplicationEvent {
+  id String @id @default(cuid())
+  applicationId String
+  application JobApplication @relation( fields: [applicationId],references: [id],onDelete: Cascade)
+
+  actorUserId String?
+  actorUser User? @relation(fields: [actorUserId],references: [id],onDelete: SetNull)
+
+  type ApplicationEventType
+
+  title String
+  message String @db.Text
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([applicationId])
+  @@index([actorUserId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Interview {
+  id String @id @default(cuid())
+
+  applicationId String
+  application JobApplication @relation(fields: [applicationId],references: [id],onDelete: Cascade)
+
+  scheduledAt DateTime
+  durationMinutes Int @default(30)
+
+  mode InterviewMode @default(VIDEO)
+
+  meetingUrl String?
+  location String?
+
+  notes String? @db.Text
+
+  status InterviewStatus @default(SCHEDULED)
+
+  createdById String
+  createdBy User @relation(fields: [createdById],references: [id],onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicationId])
+  @@index([scheduledAt])
+  @@index([status])
 }
