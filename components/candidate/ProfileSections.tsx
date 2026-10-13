@@ -285,20 +285,20 @@ function ExperienceSection() {
 
   return (
     <>
-      <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+      <Card className="border-border bg-card text-foreground ">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <BriefcaseBusiness className="h-5 w-5 text-indigo-300" />
+              <BriefcaseBusiness className="h-5 w-5 text-primary" />
               Experience
             </CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription className="text-foreground">
               Jobs, internships, and professional contributions.
             </CardDescription>
           </div>
           <Button
             onClick={openCreate}
-            className="bg-indigo-500 text-white hover:bg-indigo-400"
+            className="bg-primary text-primary-foreground hover:bg-primary"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Experience
@@ -307,54 +307,54 @@ function ExperienceSection() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="space-y-4">
-              <Skeleton className="h-24 w-full rounded-2xl" />
-              <Skeleton className="h-24 w-full rounded-2xl" />
+              <Skeleton className="h-24 w-full rounded-md" />
+              <Skeleton className="h-24 w-full rounded-md" />
             </div>
           ) : experiences.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-300">
+            <div className="rounded-md border border-dashed border-border bg-card p-8 text-center text-sm text-foreground">
               No experience added yet.
             </div>
           ) : (
             experiences.map((experience: ExperienceRecord) => (
               <div
                 key={experience.id}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                className="rounded-md border border-border bg-card p-4"
               >
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-2">
                     <div className="space-y-1">
-                      <p className="text-lg font-semibold text-white">
+                      <p className="text-lg font-semibold text-foreground">
                         {experience.jobTitle}
                       </p>
-                      <p className="text-sm text-indigo-200">
+                      <p className="text-sm text-primary">
                         {experience.companyName}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-xs text-slate-300">
-                      <Badge className="bg-white/10 text-slate-100 hover:bg-white/10">
+                    <div className="flex flex-wrap gap-2 text-xs text-foreground">
+                      <Badge className="bg-card text-foreground hover:bg-card">
                         {experience.employmentType?.replace("_", " ") ??
                           "FULL TIME"}
                       </Badge>
                       {experience.location ? (
-                        <Badge className="bg-white/10 text-slate-100 hover:bg-white/10">
+                        <Badge className="bg-card text-foreground hover:bg-card">
                           {experience.location}
                         </Badge>
                       ) : null}
                     </div>
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-foreground">
                       {formatRange(
                         experience.startDate,
                         experience.endDate,
-                        experience.isCurrent,
+                        experience.isCurrent ?? false,
                       )}
                     </p>
                     {experience.description ? (
-                      <p className="text-sm text-slate-300">
+                      <p className="text-sm text-foreground">
                         {experience.description}
                       </p>
                     ) : null}
                     {experience.responsibilities ? (
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-muted-foreground">
                         {experience.responsibilities}
                       </p>
                     ) : null}
@@ -363,7 +363,7 @@ function ExperienceSection() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() => openEdit(experience)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -371,7 +371,7 @@ function ExperienceSection() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() =>
                         setDeleteTarget({
                           key: "experience",
@@ -390,12 +390,12 @@ function ExperienceSection() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-white/10 bg-slate-950 text-white sm:max-w-2xl">
+        <DialogContent className="border-border bg-background text-foreground sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Edit Experience" : "Add Experience"}
             </DialogTitle>
-            <DialogDescription className="text-slate-300">
+            <DialogDescription className="text-foreground">
               Add your role, dates, responsibilities, and employment details.
             </DialogDescription>
           </DialogHeader>
@@ -418,7 +418,7 @@ function ExperienceSection() {
                 placeholder="Acme Inc."
               />
               <div className="space-y-2">
-                <Label className="text-sm text-slate-200">
+                <Label className="text-sm text-foreground">
                   Employment type
                 </Label>
                 <select
@@ -429,7 +429,7 @@ function ExperienceSection() {
                       employmentType: event.target.value,
                     }))
                   }
-                  className="h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 >
                   <option value="FULL_TIME">Full time</option>
                   <option value="PART_TIME">Part time</option>
@@ -466,7 +466,7 @@ function ExperienceSection() {
                 disabled={form.isCurrent}
               />
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-200">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <input
                 type="checkbox"
                 checked={form.isCurrent}
@@ -501,14 +501,14 @@ function ExperienceSection() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+                className="border-border bg-card text-foreground hover:bg-card"
                 onClick={() => setOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-500 text-white hover:bg-indigo-400"
+                className="bg-primary text-primary-foreground hover:bg-primary"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {editingId
@@ -528,19 +528,19 @@ function ExperienceSection() {
         open={Boolean(deleteTarget?.key === "experience")}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="border-white/10 bg-slate-950 text-white">
+        <AlertDialogContent className="border-border bg-background text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this experience?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-300">
+            <AlertDialogDescription className="text-foreground">
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-white/5 text-white hover:bg-white/10">
+            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-card">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 text-white hover:bg-red-400"
+              className="bg-destructive/10 text-foreground hover:bg-destructive/10"
               onClick={async () => {
                 if (deleteTarget?.key === "experience") {
                   await deleteMutation.mutateAsync(deleteTarget.id);
@@ -633,20 +633,20 @@ function ProjectSection() {
 
   return (
     <>
-      <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+      <Card className="border-border bg-card text-foreground ">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <Rocket className="h-5 w-5 text-indigo-300" />
+              <Rocket className="h-5 w-5 text-primary" />
               Projects
             </CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription className="text-foreground">
               Side projects, case studies, and prototypes.
             </CardDescription>
           </div>
           <Button
             onClick={openCreate}
-            className="bg-indigo-500 text-white hover:bg-indigo-400"
+            className="bg-primary text-primary-foreground hover:bg-primary"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Project
@@ -655,33 +655,33 @@ function ProjectSection() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="space-y-4">
-              <Skeleton className="h-24 w-full rounded-2xl" />
-              <Skeleton className="h-24 w-full rounded-2xl" />
+              <Skeleton className="h-24 w-full rounded-md" />
+              <Skeleton className="h-24 w-full rounded-md" />
             </div>
           ) : projects.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-300">
+            <div className="rounded-md border border-dashed border-border bg-card p-8 text-center text-sm text-foreground">
               No projects added yet.
             </div>
           ) : (
             projects.map((project: ProjectRecord) => (
               <div
                 key={project.id}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                className="rounded-md border border-border bg-card p-4"
               >
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-2">
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-lg font-semibold text-foreground">
                       {project.title}
                     </p>
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-foreground">
                       {project.description || "Project summary not added."}
                     </p>
                     {project.technologies ? (
-                      <p className="text-sm text-indigo-200">
+                      <p className="text-sm text-primary">
                         {project.technologies}
                       </p>
                     ) : null}
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-foreground">
                       {formatRange(project.startDate, project.endDate, false)}
                     </p>
                     <div className="flex flex-wrap gap-2 text-xs">
@@ -690,7 +690,7 @@ function ProjectSection() {
                           href={project.githubUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-cyan-300 underline"
+                          className="text-primary underline"
                         >
                           GitHub
                         </a>
@@ -700,7 +700,7 @@ function ProjectSection() {
                           href={project.liveUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-cyan-300 underline"
+                          className="text-primary underline"
                         >
                           Live demo
                         </a>
@@ -711,7 +711,7 @@ function ProjectSection() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() => openEdit(project)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -719,7 +719,7 @@ function ProjectSection() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() =>
                         setDeleteTarget({ key: "project", id: project.id })
                       }
@@ -735,12 +735,12 @@ function ProjectSection() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-white/10 bg-slate-950 text-white sm:max-w-2xl">
+        <DialogContent className="border-border bg-background text-foreground sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Edit Project" : "Add Project"}
             </DialogTitle>
-            <DialogDescription className="text-slate-300">
+            <DialogDescription className="text-foreground">
               Document your work, stack, and project link(s).
             </DialogDescription>
           </DialogHeader>
@@ -809,14 +809,14 @@ function ProjectSection() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+                className="border-border bg-card text-foreground hover:bg-card"
                 onClick={() => setOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-500 text-white hover:bg-indigo-400"
+                className="bg-primary text-primary-foreground hover:bg-primary"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {editingId
@@ -836,19 +836,19 @@ function ProjectSection() {
         open={Boolean(deleteTarget?.key === "project")}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="border-white/10 bg-slate-950 text-white">
+        <AlertDialogContent className="border-border bg-background text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this project?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-300">
+            <AlertDialogDescription className="text-foreground">
               This project will be removed from your profile.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-white/5 text-white hover:bg-white/10">
+            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-card">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 text-white hover:bg-red-400"
+              className="bg-destructive/10 text-foreground hover:bg-destructive/10"
               onClick={async () => {
                 if (deleteTarget?.key === "project") {
                   await deleteMutation.mutateAsync(deleteTarget.id);
@@ -937,20 +937,20 @@ function CertificationSection() {
 
   return (
     <>
-      <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+      <Card className="border-border bg-card text-foreground ">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <FileBadge2 className="h-5 w-5 text-indigo-300" />
+              <FileBadge2 className="h-5 w-5 text-primary" />
               Certifications
             </CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription className="text-foreground">
               Professional credentials and certifications.
             </CardDescription>
           </div>
           <Button
             onClick={openCreate}
-            className="bg-indigo-500 text-white hover:bg-indigo-400"
+            className="bg-primary text-primary-foreground hover:bg-primary"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Certification
@@ -959,37 +959,37 @@ function CertificationSection() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="space-y-4">
-              <Skeleton className="h-20 w-full rounded-2xl" />
-              <Skeleton className="h-20 w-full rounded-2xl" />
+              <Skeleton className="h-20 w-full rounded-md" />
+              <Skeleton className="h-20 w-full rounded-md" />
             </div>
           ) : certifications.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-300">
+            <div className="rounded-md border border-dashed border-border bg-card p-8 text-center text-sm text-foreground">
               No certifications added yet.
             </div>
           ) : (
             certifications.map((certification: CertificationRecord) => (
               <div
                 key={certification.id}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                className="rounded-md border border-border bg-card p-4"
               >
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-2">
                     <div className="space-y-1">
-                      <p className="text-lg font-semibold text-white">
+                      <p className="text-lg font-semibold text-foreground">
                         {certification.title}
                       </p>
-                      <p className="text-sm text-indigo-200">
+                      <p className="text-sm text-primary">
                         {certification.issuer}
                       </p>
                     </div>
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-foreground">
                       {formatDate(certification.issueDate)}
                       {certification.expiryDate
                         ? ` - ${formatDate(certification.expiryDate)}`
                         : ""}
                     </p>
                     {certification.credentialId ? (
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-muted-foreground">
                         Credential ID: {certification.credentialId}
                       </p>
                     ) : null}
@@ -998,7 +998,7 @@ function CertificationSection() {
                         href={certification.credentialUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sm text-cyan-300 underline"
+                        className="text-sm text-primary underline"
                       >
                         View credential
                       </a>
@@ -1008,7 +1008,7 @@ function CertificationSection() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() => openEdit(certification)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -1016,7 +1016,7 @@ function CertificationSection() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() =>
                         setDeleteTarget({
                           key: "certification",
@@ -1035,12 +1035,12 @@ function CertificationSection() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-white/10 bg-slate-950 text-white sm:max-w-2xl">
+        <DialogContent className="border-border bg-background text-foreground sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Edit Certification" : "Add Certification"}
             </DialogTitle>
-            <DialogDescription className="text-slate-300">
+            <DialogDescription className="text-foreground">
               Add professional credentials and supporting details.
             </DialogDescription>
           </DialogHeader>
@@ -1100,14 +1100,14 @@ function CertificationSection() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+                className="border-border bg-card text-foreground hover:bg-card"
                 onClick={() => setOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-500 text-white hover:bg-indigo-400"
+                className="bg-primary text-primary-foreground hover:bg-primary"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {editingId
@@ -1127,19 +1127,19 @@ function CertificationSection() {
         open={Boolean(deleteTarget?.key === "certification")}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="border-white/10 bg-slate-950 text-white">
+        <AlertDialogContent className="border-border bg-background text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this certification?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-300">
+            <AlertDialogDescription className="text-foreground">
               This certification will be removed from your profile.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-white/5 text-white hover:bg-white/10">
+            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-card">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 text-white hover:bg-red-400"
+              className="bg-destructive/10 text-foreground hover:bg-destructive/10"
               onClick={async () => {
                 if (deleteTarget?.key === "certification") {
                   await deleteMutation.mutateAsync(deleteTarget.id);
@@ -1227,7 +1227,7 @@ function SkillsSection() {
         payload: updatePayload,
       });
     } else {
-      await createMutation.mutateAsync(payload);
+      await createMutation.mutateAsync(payload as any);
     }
 
     setOpen(false);
@@ -1237,20 +1237,20 @@ function SkillsSection() {
 
   return (
     <>
-      <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+       <Card className="border-border bg-card text-foreground ">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <Code2 className="h-5 w-5 text-indigo-300" />
+              <Code2 className="h-5 w-5 text-primary" />
               Skills
             </CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription className="text-foreground">
               Keep your technical strengths current and searchable.
             </CardDescription>
           </div>
           <Button
             onClick={openCreate}
-            className="bg-indigo-500 text-white hover:bg-indigo-400"
+            className="bg-primary text-primary-foreground hover:bg-primary"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Skill
@@ -1259,44 +1259,51 @@ function SkillsSection() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="space-y-4">
-              <Skeleton className="h-20 w-full rounded-2xl" />
-              <Skeleton className="h-20 w-full rounded-2xl" />
+              <Skeleton className="h-20 w-full rounded-md" />
+              <Skeleton className="h-20 w-full rounded-md" />
             </div>
           ) : skills.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-300">
+            <div className="rounded-md border border-dashed border-border bg-card p-8 text-center text-sm text-foreground">
               No skills added yet.
             </div>
           ) : (
             skills.map((skill: SkillRecord) => (
               <div
                 key={skill.id}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                className="rounded-md border border-border bg-card p-4"
               >
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-lg font-semibold text-white">
+                      <p className="text-lg font-semibold text-foreground">
                         {skill.skill?.name || "Skill"}
                       </p>
                       {skill.isPrimary ? (
-                        <Badge className="bg-indigo-500/20 text-indigo-100 hover:bg-indigo-500/20">
+                        <Badge className="bg-accent text-primary hover:bg-accent">
                           Primary
                         </Badge>
                       ) : null}
                     </div>
-                    <p className="text-sm text-slate-300">
-                      {skill.proficiencyLevel} • {skill.yearsOfExperience ?? 0}{" "}
-                      years
+                    <p className="text-sm text-foreground">
+                      {/Extracted automatically|Backfilled/.test(
+                        skill.notes || "",
+                      )
+                        ? "Mention identified in resume"
+                        : `Recorded proficiency: ${skill.proficiencyLevel || "Not specified"}`}
+                      {skill.yearsOfExperience != null &&
+                        ` · ${skill.yearsOfExperience} recorded years`}
                     </p>
                     {skill.notes ? (
-                      <p className="text-sm text-slate-400">{skill.notes}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {skill.notes}
+                      </p>
                     ) : null}
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() => openEdit(skill)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -1304,7 +1311,7 @@ function SkillsSection() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-white/10 bg-white/5 hover:bg-white/10"
+                      className="border-border bg-card hover:bg-card"
                       onClick={() =>
                         setDeleteTarget({ key: "skill", id: skill.id })
                       }
@@ -1320,10 +1327,10 @@ function SkillsSection() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-white/10 bg-slate-950 text-white sm:max-w-xl">
+        <DialogContent className="border-border bg-background text-foreground sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Skill" : "Add Skill"}</DialogTitle>
-            <DialogDescription className="text-slate-300">
+            <DialogDescription className="text-foreground">
               Track skills, proficiency, and relevant experience.
             </DialogDescription>
           </DialogHeader>
@@ -1338,16 +1345,17 @@ function SkillsSection() {
                 placeholder="Next.js"
               />
               <div className="space-y-2">
-                <Label className="text-sm text-slate-200">Proficiency</Label>
+                <Label className="text-sm text-foreground">Proficiency</Label>
                 <select
                   value={form.proficiencyLevel}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      proficiencyLevel: event.target.value,
+                      proficiencyLevel: event.target.value as
+                        "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT",
                     }))
                   }
-                  className="h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 >
                   <option value="BEGINNER">Beginner</option>
                   <option value="INTERMEDIATE">Intermediate</option>
@@ -1365,7 +1373,7 @@ function SkillsSection() {
                 placeholder="3"
               />
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-200">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <input
                 type="checkbox"
                 checked={form.isPrimary}
@@ -1390,14 +1398,14 @@ function SkillsSection() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+                className="border-border bg-card text-foreground hover:bg-card"
                 onClick={() => setOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-500 text-white hover:bg-indigo-400"
+                className="bg-primary text-primary-foreground hover:bg-primary"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {editingId
@@ -1417,20 +1425,20 @@ function SkillsSection() {
         open={Boolean(deleteTarget?.key === "skill")}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="border-white/10 bg-slate-950 text-white">
+        <AlertDialogContent className="border-border bg-background text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this skill?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-300">
+            <AlertDialogDescription className="text-foreground">
               This will remove the skill from your profile without deleting the
               shared skill master entry.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-white/5 text-white hover:bg-white/10">
+            <AlertDialogCancel className="border-border bg-card text-foreground hover:bg-card">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 text-white hover:bg-red-400"
+              className="bg-destructive/10 text-foreground hover:bg-destructive/10"
               onClick={async () => {
                 if (deleteTarget?.key === "skill") {
                   await deleteMutation.mutateAsync(deleteTarget.id);

@@ -1,5 +1,6 @@
 import authOptions from "@/lib/auth";
 import { db } from "@/lib/db";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { readFile } from "fs/promises";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -8,6 +9,9 @@ import path from "path";
 export const runtime = "nodejs";
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL ?? "http://127.0.0.1:8001";
+
+const SUPABASE_BUCKET =
+  process.env.SUPABASE_STORAGE_BUCKET ?? "candidate-resumes";
 
 function normalizeSkillName(skill: string) {
   return skill.trim().toLowerCase();
@@ -57,7 +61,9 @@ export async function POST() {
       );
     }
 
-    if (!candidate.resume.fileUrl) {
+    const resume = candidate.resume;
+
+    if (!resume.fileUrl) {
       return NextResponse.json(
         { message: "Resume file not found" },
         { status: 404 },
@@ -65,38 +71,106 @@ export async function POST() {
     }
 
     // read the resume file from the public folder
-    const filePath = path.join(
-      process.cwd(),
-      "public",
-      candidate.resume.fileUrl,
-    );
-    const fileBuffer = await readFile(filePath);
+    // const filePath = path.join(
+    //   process.cwd(),
+    //   "public",
+    //   candidate.resume.fileUrl,
+    // );
+    // const fileBuffer = await readFile(filePath);
 
+    // const formData = new FormData();
+
+    // // append the resume file to the form data
+    // formData.append(
+    //   "file",
+    //   new Blob([fileBuffer], {
+    //     type: candidate.resume.mimeType ?? "application/pdf",
+    //   }),
+    //   candidate.resume.fileName ?? "resume.pdf",
+    // );
+
+    // // call the AI service to analyze the resume
+    // const aiResponse = await fetch(`${AI_SERVICE_URL}/analyze-resume`, {
+    //   method: "POST",
+    //   body: formData,
+    // });
+
+    // if (!aiResponse.ok) {
+    //   const errorText = await aiResponse.text();
+    //   return NextResponse.json(
+    //     {
+    //       message: "AI service failed",
+    //       error: errorText,
+    //     },
+    //     { status: 500 },
+    //   );
+    // }
+
+    const storagePath = resume.fileUrl.slice("supabase:".length);
+
+    if (
+      !storagePath ||
+      !storagePath.startsWith(`candidates/${candidate.id}/`)
+    ) {
+      return NextResponse.json(
+        { message: "Invalid resume storage path" },
+        { status: 400 },
+      );
+    }
+
+    // 4. Download resume bytes from Supabase private Storage.
+    const { data: fileBlob, error: downloadError } = await supabaseAdmin.storage
+      .from(SUPABASE_BUCKET)
+      .download(storagePath);
+
+    if (downloadError || !fileBlob) {
+      console.error("SUPABASE_DOWNLOAD_ERROR:", downloadError);
+
+      return NextResponse.json(
+        { message: "Failed to download resume from storage" },
+        { status: 502 },
+      );
+    }
+
+    // 5. Send the downloaded file to the existing FastAPI parser.
     const formData = new FormData();
 
-    // append the resume file to the form data
     formData.append(
       "file",
-      new Blob([fileBuffer], {
-        type: candidate.resume.mimeType ?? "application/pdf",
+      new Blob([await fileBlob.arrayBuffer()], {
+        type: resume.mimeType ?? "application/octet-stream",
       }),
-      candidate.resume.fileName ?? "resume.pdf",
+      resume.fileName ?? undefined,
     );
 
-    // call the AI service to analyze the resume
-    const aiResponse = await fetch(`${AI_SERVICE_URL}/analyze-resume`, {
-      method: "POST",
-      body: formData,
-    });
+    let aiResponse: Response;
+
+    try {
+      aiResponse = await fetch(`${AI_SERVICE_URL}/analyze-resume`, {
+        method: "POST",
+        body: formData,
+        // cache: "no-store",
+        // signal: AbortSignal.timeout(120000),
+      });
+    } catch (error) {
+      console.error("AI_PARSE_CONNECTION_ERROR:", error);
+
+      return NextResponse.json(
+        {
+          message: "Unable to connect to resume parsing service",
+        },
+        { status: 502 },
+      );
+    }
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
+
+      console.error("AI_PARSE_SERVICE_ERROR:", aiResponse.status, errorText);
+
       return NextResponse.json(
-        {
-          message: "AI service failed",
-          error: errorText,
-        },
-        { status: 500 },
+        { message: "Resume parsing service failed" },
+        { status: 502 },
       );
     }
 
@@ -115,7 +189,7 @@ export async function POST() {
 
     const extractedSkills: string[] = parsed.skillsFound ?? [];
 
-     const record = await db.$transaction(async (tx) => {
+    const record = await db.$transaction(async (tx) => {
       // 1) Sync extracted skills into SkillMaster + CandidateSkill
       for (const skillName of extractedSkills) {
         const normalized = normalizeSkillName(skillName);
@@ -166,7 +240,7 @@ export async function POST() {
         },
         create: {
           candidateProfileId: candidate.id,
-          resumeId: candidate.resume.id,
+          resumeId: resume.id,
           overallScore: intelligence.overallScore,
           atsScore: intelligence.atsScore,
           skillScore: intelligence.skillScore,
@@ -188,7 +262,7 @@ export async function POST() {
           },
         },
         update: {
-          resumeId: candidate.resume.id,
+          resumeId: resume.id,
           overallScore: intelligence.overallScore,
           atsScore: intelligence.atsScore,
           skillScore: intelligence.skillScore,
@@ -214,7 +288,7 @@ export async function POST() {
 
       // 3) Save extracted text to resume
       await tx.resume.update({
-        where: { id: candidate.resume.id },
+        where: { id: resume.id },
         data: {
           extractedText: parsed.cleanedText,
           parsedAt: new Date(),
@@ -234,8 +308,7 @@ export async function POST() {
       {
         message: "Failed to generate candidate intelligence",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
-  
 }

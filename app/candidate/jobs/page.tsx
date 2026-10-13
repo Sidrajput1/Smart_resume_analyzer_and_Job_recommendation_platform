@@ -1,9 +1,12 @@
 import CandidateJobsClient from '@/components/candidate/CandidateJobsClient'
-import React from 'react'
+import { LoadingBriefing } from '@/components/career/Primitives'
+import React, { Suspense } from 'react'
 
 function CandidateJobsPage() {
   return (
+    <Suspense fallback={<LoadingBriefing/>}>
     <CandidateJobsClient/>
+    </Suspense>
   )
 }
 

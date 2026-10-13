@@ -30,7 +30,6 @@ import {
   useDeleteEducation,
   useUpdateEducation,
 } from "@/hooks/useCandidateEducation";
-import { useUpdateCandidateResume } from "@/hooks/useCandidateResume";
 
 type EducationFormState = {
   institutionName: string;
@@ -42,6 +41,10 @@ type EducationFormState = {
   endDate: string;
   isCurrentlyStudying: boolean;
 };
+type EducationRecord = Omit<
+  Partial<EducationFormState>,
+  "startDate" | "endDate"
+> & { id: string; startDate?: string | null; endDate?: string | null };
 
 const emptyForm: EducationFormState = {
   institutionName: "",
@@ -60,9 +63,10 @@ function EducationCandidate() {
   const updateMutation = useUpdateEducation();
   const deleteMutation = useDeleteEducation();
 
-  const educations = data?.educations ?? [];
+  const educations: EducationRecord[] = data?.educations ?? [];
 
   const [open, setOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EducationFormState>(emptyForm);
 
@@ -72,7 +76,7 @@ function EducationCandidate() {
     setOpen(true);
   }
 
-  function openEdit(education: any) {
+  function openEdit(education: EducationRecord) {
     setEditingId(education.id);
     setForm({
       institutionName: education.institutionName ?? "",
@@ -113,7 +117,12 @@ function EducationCandidate() {
   }
 
   async function handleDelete(id: string) {
-    await deleteMutation.mutateAsync(id);
+    try {
+      await deleteMutation.mutateAsync(id);
+      setDeleteId(null);
+    } catch {
+      /* Keep confirmation open so the operation can be retried. */
+    }
   }
 
   if (isLoading) {
@@ -121,21 +130,21 @@ function EducationCandidate() {
   }
 
   return (
-    <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+    <Card className="border-border bg-card text-foreground ">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-indigo-300" />
+            <GraduationCap className="h-5 w-5 text-primary" />
             Education
           </CardTitle>
-          <CardDescription className="text-slate-300">
+          <CardDescription className="text-foreground">
             Add your academic background and qualifications.
           </CardDescription>
         </div>
 
         <Button
           onClick={openCreate}
-          className="bg-indigo-500 text-white hover:bg-indigo-400"
+          className="bg-primary text-primary-foreground hover:bg-primary"
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Education
@@ -144,36 +153,36 @@ function EducationCandidate() {
 
       <CardContent className="space-y-4">
         {educations.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center">
+          <div className="rounded-md border border-dashed border-border bg-card p-8 text-center">
             <p className="font-medium">No education added yet</p>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               Add your college, degree, and study details to start building your
               profile.
             </p>
           </div>
         ) : (
-          educations.map((education: any) => (
+          educations.map((education) => (
             <div
               key={education.id}
-              className="rounded-2xl border border-white/10 bg-white/5 p-4 transition duration-300 hover:bg-white/10"
+              className="rounded-md border border-border bg-card p-4 transition duration-300 hover:bg-card"
             >
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-1">
                   <p className="text-lg font-semibold">{education.degree}</p>
-                  <p className="text-sm text-slate-300">
+                  <p className="text-sm text-foreground">
                     {education.institutionName}
                   </p>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-muted-foreground">
                     {education.fieldOfStudy || "Field not specified"} •{" "}
                     {education.grade || "Grade not specified"}
                   </p>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-muted-foreground">
                     {education.isCurrentlyStudying
                       ? "Currently studying"
                       : `${education.startDate ? new Date(education.startDate).toLocaleDateString() : "N/A"} - ${education.endDate ? new Date(education.endDate).toLocaleDateString() : "Present"}`}
                   </p>
                   {education.description ? (
-                    <p className="mt-2 text-sm text-slate-300">
+                    <p className="mt-2 text-sm text-foreground">
                       {education.description}
                     </p>
                   ) : null}
@@ -183,7 +192,8 @@ function EducationCandidate() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="border-white/10 bg-white/5 hover:bg-white/10"
+                    aria-label={`Edit ${education.degree || "education"}`}
+                    className="border-border bg-card hover:bg-card"
                     onClick={() => openEdit(education)}
                   >
                     <Pencil className="h-4 w-4" />
@@ -191,8 +201,9 @@ function EducationCandidate() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="border-white/10 bg-white/5 hover:bg-white/10"
-                    onClick={() => handleDelete(education.id)}
+                    className="border-border bg-card hover:bg-card"
+                    onClick={() => setDeleteId(education.id)}
+                    aria-label={`Delete ${education.degree || "education"}`}
                     disabled={deleteMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -204,13 +215,45 @@ function EducationCandidate() {
         )}
       </CardContent>
 
+      <Dialog
+        open={Boolean(deleteId)}
+        onOpenChange={(next) =>
+          !next && !deleteMutation.isPending && setDeleteId(null)
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove this education record?</DialogTitle>
+            <DialogDescription>
+              This record will be removed from your profile. Keep it if you
+              still want it to support your career information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="confirmation-actions">
+            <button
+              className="action action-secondary"
+              disabled={deleteMutation.isPending}
+              onClick={() => setDeleteId(null)}
+            >
+              Keep record
+            </button>
+            <button
+              className="action"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteId && handleDelete(deleteId)}
+            >
+              {deleteMutation.isPending ? "Removing…" : "Remove record"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-white/10 bg-slate-950 text-white sm:max-w-2xl">
+        <DialogContent className="border-border bg-background text-foreground sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Edit Education" : "Add Education"}
             </DialogTitle>
-            <DialogDescription className="text-slate-300">
+            <DialogDescription className="text-foreground">
               Fill the details of your academic background.
             </DialogDescription>
           </DialogHeader>
@@ -274,7 +317,7 @@ function EducationCandidate() {
                   setForm((p) => ({ ...p, description: e.target.value }))
                 }
                 placeholder="Additional details about your education..."
-                className="min-h-28 border-white/10 bg-white/10 text-white placeholder:text-slate-400 focus-visible:ring-indigo-400"
+                className="min-h-28 border-border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-ring"
               />
             </div>
 
@@ -283,13 +326,13 @@ function EducationCandidate() {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                className="border-white/10 bg-white/5 hover:bg-white/10"
+                className="border-border bg-card hover:bg-card"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-500 text-white hover:bg-indigo-400"
+                className="bg-primary text-primary-foreground hover:bg-primary"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {editingId ? "Update Education" : "Save Education"}
@@ -313,14 +356,16 @@ function Field({
   onChange: (value: string) => void;
   type?: string;
 }) {
+  const id = React.useId();
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}</Label>
       <Input
+        id={id}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border-white/10 bg-white/10 text-white placeholder:text-slate-400 focus-visible:ring-indigo-400"
+        className="border-border bg-card text-foreground placeholder:text-muted-foreground focus-visible:ring-ring"
       />
     </div>
   );
@@ -329,8 +374,8 @@ function Field({
 function EducationSkeleton() {
   return (
     <div className="space-y-4">
-      <Skeleton className="h-20 w-full rounded-3xl bg-white/10" />
-      <Skeleton className="h-40 w-full rounded-3xl bg-white/10" />
+      <Skeleton className="h-20 w-full rounded-lg bg-card" />
+      <Skeleton className="h-40 w-full rounded-lg bg-card" />
     </div>
   );
 }

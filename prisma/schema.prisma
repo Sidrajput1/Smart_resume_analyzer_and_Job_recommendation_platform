@@ -142,6 +142,13 @@ enum InterviewStatus {
   CANCELLED
   COMPLETED
 }
+// Mock interview status
+enum MockInterviewStatus {
+  IN_PROGRESS
+  EVALUATING
+  EVALUATION_FAILED
+  COMPLETED
+}
 
 // ==============================
 // USER
@@ -750,10 +757,10 @@ model Interview {
   notes String? @db.Text
 
   status InterviewStatus @default(SCHEDULED)
-
+  
   createdById String
   createdBy User @relation(fields: [createdById],references: [id],onDelete: Restrict)
-
+  mockSessions MockInterviewSession[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -761,3 +768,49 @@ model Interview {
   @@index([scheduledAt])
   @@index([status])
 }
+
+
+model MockInterviewSession {
+  id                  String              @id @default(cuid())
+  interviewId         String
+  interview           Interview           @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  attemptNumber       Int
+  status              MockInterviewStatus @default(IN_PROGRESS)
+  questionSource      String              // LLM or TEMPLATE
+  currentQuestion     Int                 @default(0) // zero-based index to answer next
+  questionCount       Int
+  questions           MockInterviewQuestion[]
+  report              Json?
+  totalScore          Float?
+  evaluationMethod    String?             // LLM or HEURISTIC
+  evaluationStartedAt DateTime?
+  createdAt           DateTime            @default(now())
+  completedAt         DateTime?
+  updatedAt           DateTime            @updatedAt
+
+  @@unique([interviewId, attemptNumber])
+  @@index([interviewId, status])
+}
+
+model MockInterviewQuestion {
+  id            String                @id @default(cuid())
+  sessionId     String
+  session       MockInterviewSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  position      Int                   // zero-based
+  prompt        String                @db.Text
+  category      String
+  focusSkills   String[]
+  answer        MockInterviewAnswer?
+
+  @@unique([sessionId, position])
+}
+
+model MockInterviewAnswer {
+  id          String                @id @default(cuid())
+  questionId  String                @unique
+  question    MockInterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  transcript  String                @db.Text
+  evaluation  Json?
+  submittedAt DateTime              @default(now())
+}
+

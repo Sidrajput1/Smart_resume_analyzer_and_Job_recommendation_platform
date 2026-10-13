@@ -44,8 +44,9 @@ export async function matchJobsForResume(
             resumeText,
             jobs
         });
+        console.log("matchJobsForResume data",data)
 
-        return data?.result ?? null
+        return data?.results ?? null
     } catch (error) {
         console.error("matchJobsForResume failed",error);
         return null;
@@ -60,7 +61,7 @@ export async function rankCandidatesForJob(jobText:string, candidates:CandidateR
             candidates
         });
 
-        return data?.result ?? null
+        return data?.results ?? null
     } catch (error) {
         console.error("rankcandidateforjob failed",error);
         return null;

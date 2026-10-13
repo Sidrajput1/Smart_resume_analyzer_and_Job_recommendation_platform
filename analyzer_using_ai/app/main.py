@@ -7,7 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from resume_parser import parse_resume_file
 from resume_intelligence import analyze_resume_text
 from match_engine import rank_candidates_for_job,rank_jobs_for_resume
+from routers import mock_interview
+from dotenv import load_dotenv
 
+load_dotenv()
+
+print(load_dotenv())
+#print("AI_INTERNAL_TOKEN",os.environ.get("AI_INTERNAL_TOKEN"))
 
 app = FastAPI(title='AI Service for Smart resume Portal')
 
@@ -18,11 +24,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
+app.include_router(mock_interview.router)
 @app.get("/health")
 
 def health_check():
     return {"status":"ok","message":"Ai service is running"}
+
+
 
 class JobMatchItem(BaseModel):
     jobId: str

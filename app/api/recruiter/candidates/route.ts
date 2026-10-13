@@ -124,6 +124,7 @@ export async function GET(request: Request) {
         job: {
           companyId: recruiter.companyId,
           deletedAt: null,
+          //Ideally, replace as any with your actual Prisma application status enum and validate incoming values.
           ...(status ? { status: status as any } : {}),
         },
         ...(search

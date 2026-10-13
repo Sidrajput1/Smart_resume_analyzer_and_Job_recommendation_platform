@@ -3,12 +3,17 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { jobCreateSchema } from "@/lib/validators/job";
+import { Prisma } from "@prisma/client";
 
-async function findOrCreateSkill(name: string) {
+async function findOrCreateSkill(
+  tx: Prisma.TransactionClient,
+  name: string
+) {
   const trimmed = name.trim();
+
   if (!trimmed) return null;
 
-  const existing = await db.skillMaster.findFirst({
+  const existing = await tx.skillMaster.findFirst({
     where: {
       name: {
         equals: trimmed,
@@ -19,7 +24,7 @@ async function findOrCreateSkill(name: string) {
 
   if (existing) return existing;
 
-  return db.skillMaster.create({
+  return tx.skillMaster.create({
     data: {
       name: trimmed,
     },
@@ -118,7 +123,7 @@ export async function PATCH(
         });
 
         for (const skillName of parsed.data.skills) {
-          const skill = await findOrCreateSkill(skillName);
+          const skill = await findOrCreateSkill(tx,skillName);
           if (!skill) continue;
 
           await tx.jobSkill.create({
@@ -133,6 +138,9 @@ export async function PATCH(
       }
 
       return job;
+    },{
+      maxWait: 10000,
+      timeout: 20000,
     });
 
     const fullJob = await db.job.findUnique({

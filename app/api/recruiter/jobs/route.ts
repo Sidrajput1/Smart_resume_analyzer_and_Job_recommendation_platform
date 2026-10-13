@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import authOptions from "@/lib/auth";
 import { db } from "@/lib/db";
 import { jobCreateSchema } from "@/lib/validators/job";
@@ -25,11 +26,36 @@ async function generateUniqueSlug(baseTitle: string) {
   return slug;
 }
 
-async function findOrCreateSkill(name: string) {
+// async function findOrCreateSkill(name: string) {
+//   const trimmed = name.trim();
+//   if (!trimmed) return null;
+
+//   const existing = await db.skillMaster.findFirst({
+//     where: {
+//       name: {
+//         equals: trimmed,
+//         mode: "insensitive",
+//       },
+//     },
+//   });
+
+//   if (existing) return existing;
+
+//   return db.skillMaster.create({
+//     data: {
+//       name: trimmed,
+//     },
+//   });
+// }
+
+// api for get request
+
+async function findOrCreateSkill(tx: Prisma.TransactionClient, name: string) {
   const trimmed = name.trim();
+
   if (!trimmed) return null;
 
-  const existing = await db.skillMaster.findFirst({
+  const existing = await tx.skillMaster.findFirst({
     where: {
       name: {
         equals: trimmed,
@@ -40,14 +66,13 @@ async function findOrCreateSkill(name: string) {
 
   if (existing) return existing;
 
-  return db.skillMaster.create({
+  return tx.skillMaster.create({
     data: {
       name: trimmed,
     },
   });
 }
 
-// api for get request
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -201,51 +226,65 @@ export async function POST(request: Request) {
 
     const slug = await generateUniqueSlug(parsed.data.title);
 
-    const job = await db.$transaction(async (tx) => {
-      const createdJob = await tx.job.create({
-        data: {
-          companyId: recruiter.companyId,
-          postedByID: session?.user?.id,
-          slug,
-          title: parsed.data.title,
-          description: parsed.data.description,
-          responsibilities: parsed.data.responsibilities ?? null,
-          benefits: parsed.data.benefits ?? null,
-          jobType: parsed.data.jobType,
-          workMode: parsed.data.workMode,
-          status: parsed.data.status ?? "DRAFT",
-          locationCity: parsed.data.locationCity ?? null,
-          locationState: parsed.data.locationState ?? null,
-          locationCountry: parsed.data.locationCountry ?? null,
-          experienceLevel: parsed.data.experienceLevel ?? null,
-          requiredExperienceYears: parsed.data.requiredExperienceYears ?? null,
-          salaryMin: parsed.data.salaryMin ?? null,
-          salaryMax: parsed.data.salaryMax ?? null,
-          currency: parsed.data.currency || "INR",
-          applicationDeadline: parsed.data.applicationDeadline
-            ? new Date(parsed.data.applicationDeadline)
-            : null,
-          publishedAt: parsed.data.status === "PUBLISHED" ? new Date() : null,
-        },
-      });
-
-      for (const skillName of parsed.data.skills) {
-        const skill = await findOrCreateSkill(skillName);
-
-        if (!skill) continue;
-
-        await tx.jobSkill.create({
+    const job = await db.$transaction(
+      async (tx) => {
+        const createdJob = await tx.job.create({
           data: {
-            jobId: createdJob.id,
-            skillId: skill.id,
-            required: true,
-            importance: 5,
+            companyId: recruiter.companyId,
+            postedByID: session?.user?.id,
+            slug,
+            title: parsed.data.title,
+            description: parsed.data.description,
+            responsibilities: parsed.data.responsibilities ?? null,
+            benefits: parsed.data.benefits ?? null,
+            jobType: parsed.data.jobType,
+            workMode: parsed.data.workMode,
+            status: parsed.data.status ?? "DRAFT",
+            locationCity: parsed.data.locationCity ?? null,
+            locationState: parsed.data.locationState ?? null,
+            locationCountry: parsed.data.locationCountry ?? null,
+            experienceLevel: parsed.data.experienceLevel ?? null,
+            requiredExperienceYears:
+              parsed.data.requiredExperienceYears ?? null,
+            salaryMin: parsed.data.salaryMin ?? null,
+            salaryMax: parsed.data.salaryMax ?? null,
+            currency: parsed.data.currency || "INR",
+            applicationDeadline: parsed.data.applicationDeadline
+              ? new Date(parsed.data.applicationDeadline)
+              : null,
+            publishedAt: parsed.data.status === "PUBLISHED" ? new Date() : null,
           },
         });
-      }
 
-      return createdJob;
-    });
+        // 2. Create or find skills using the SAME transaction client.
+        const uniqueSkills = [
+          ...new Set(
+            parsed.data.skills.map((skill) => skill.trim()).filter(Boolean),
+          ),
+        ];
+
+        for (const skillName of uniqueSkills) {
+          const skill = await findOrCreateSkill(tx, skillName);
+
+          if (!skill) continue;
+
+          await tx.jobSkill.create({
+            data: {
+              jobId: createdJob.id,
+              skillId: skill.id,
+              required: true,
+              importance: 5,
+            },
+          });
+        }
+
+        return createdJob;
+      },
+      {
+        maxWait: 10000,
+        timeout: 20000,
+      },
+    );
 
     const fullJob = await db.job.findUnique({
       where: { id: job.id },

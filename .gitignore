@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env
+
+# Python FastAPI
+analyzer_using_ai/.env
+analyzer_using_ai/.env.*
 
 # vercel
 .vercel

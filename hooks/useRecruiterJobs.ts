@@ -66,7 +66,7 @@ export function useUpdaterecruiterJobs(){
 
     return useMutation({
         mutationFn:async({id,payload}:{id:string,payload:Partial<JobPayload>}) => {
-            const {data} = await api.post(`/recruiter/jobs/${id}`,payload);
+            const {data} = await api.patch(`/recruiter/jobs/${id}`,payload);
             return data;
         },
         onSuccess: (data) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   BriefcaseBusiness,
   GraduationCap,
@@ -38,10 +38,11 @@ export function EditableExtractedResume({
   isSaving = false,
 }: EditableExtractedResumeProps) {
   const [form, setForm] = useState<ParsedResumeData>(data);
-
-  useEffect(() => {
+  const [source, setSource] = useState(data);
+  if (source !== data) {
+    setSource(data);
     setForm(data);
-  }, [data]);
+  }
 
   function updatePersonal(
     field: keyof ParsedResumeData["personal"],
@@ -262,18 +263,18 @@ export function EditableExtractedResume({
   return (
     <div className="space-y-5">
       {/* Information notice */}
-      <Card className="border-amber-400/20 bg-amber-400/5 text-white">
+      <Card className="border-border bg-accent text-foreground">
         <CardContent className="p-4">
-          <p className="text-sm font-medium text-amber-200">
+          <p className="text-sm font-medium text-primary">
             Review before saving
           </p>
 
-          <p className="mt-1 text-sm leading-6 text-slate-300">
+          <p className="mt-1 text-sm leading-6 text-foreground">
             The information below was extracted from your resume. You can
             correct or remove anything before saving it to your profile.
           </p>
 
-          <p className="mt-2 text-xs text-amber-300/80">
+          <p className="mt-2 text-xs text-primary/80">
             Saving will replace the existing resume-derived education,
             experience, projects, certifications and skills.
           </p>
@@ -281,10 +282,10 @@ export function EditableExtractedResume({
       </Card>
 
       {/* Personal */}
-      <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+      <Card className="border-border bg-card text-foreground ">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <User className="h-4 w-4 text-indigo-300" />
+            <User className="h-4 w-4 text-primary" />
             Personal Information
           </CardTitle>
         </CardHeader>
@@ -335,7 +336,7 @@ export function EditableExtractedResume({
       </Card>
 
       {/* Summary */}
-      <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+      <Card className="border-border bg-card text-foreground ">
         <CardHeader>
           <CardTitle className="text-base">Professional Summary</CardTitle>
         </CardHeader>
@@ -349,7 +350,7 @@ export function EditableExtractedResume({
                 summary: event.target.value || null,
               }))
             }
-            className="min-h-32 border-white/10 bg-white/10 text-white"
+            className="min-h-32 border-border bg-card text-foreground"
             placeholder="Professional summary..."
           />
         </CardContent>
@@ -358,24 +359,26 @@ export function EditableExtractedResume({
       {/* Education */}
       <EditableSection
         title="Education"
-        icon={<GraduationCap className="h-4 w-4 text-indigo-300" />}
+        icon={<GraduationCap className="h-4 w-4 text-primary" />}
         count={form.education.length}
         onAdd={addEducation}
       >
         {form.education.map((item, index) => (
           <div
             key={index}
-            className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4"
+            className="space-y-4 rounded-md border border-border bg-card p-4"
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="font-medium text-white">Education #{index + 1}</p>
+              <p className="font-medium text-foreground">
+                Education #{index + 1}
+              </p>
 
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => removeEducation(index)}
-                className="text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -433,24 +436,26 @@ export function EditableExtractedResume({
       {/* Experience */}
       <EditableSection
         title="Experience"
-        icon={<BriefcaseBusiness className="h-4 w-4 text-indigo-300" />}
+        icon={<BriefcaseBusiness className="h-4 w-4 text-primary" />}
         count={form.experience.length}
         onAdd={addExperience}
       >
         {form.experience.map((item, index) => (
           <div
             key={index}
-            className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4"
+            className="space-y-4 rounded-md border border-border bg-card p-4"
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="font-medium text-white">Experience #{index + 1}</p>
+              <p className="font-medium text-foreground">
+                Experience #{index + 1}
+              </p>
 
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => removeExperience(index)}
-                className="text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -501,11 +506,11 @@ export function EditableExtractedResume({
                       event.target.value.split("\n"),
                     )
                   }
-                  className="mt-2 min-h-32 border-white/10 bg-white/10 text-white"
+                  className="mt-2 min-h-32 border-border bg-card text-foreground"
                   placeholder="One responsibility per line"
                 />
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Keep one responsibility per line.
                 </p>
               </div>
@@ -521,24 +526,26 @@ export function EditableExtractedResume({
       {/* Projects */}
       <EditableSection
         title="Projects"
-        icon={<Lightbulb className="h-4 w-4 text-indigo-300" />}
+        icon={<Lightbulb className="h-4 w-4 text-primary" />}
         count={form.projects.length}
         onAdd={addProject}
       >
         {form.projects.map((item, index) => (
           <div
             key={index}
-            className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4"
+            className="space-y-4 rounded-md border border-border bg-card p-4"
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="font-medium text-white">Project #{index + 1}</p>
+              <p className="font-medium text-foreground">
+                Project #{index + 1}
+              </p>
 
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => removeProject(index)}
-                className="text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -558,7 +565,7 @@ export function EditableExtractedResume({
                 onChange={(event) =>
                   updateProject(index, "description", event.target.value)
                 }
-                className="mt-2 min-h-24 border-white/10 bg-white/10 text-white"
+                className="mt-2 min-h-24 border-border bg-card text-foreground"
               />
             </div>
 
@@ -588,7 +595,7 @@ export function EditableExtractedResume({
       {/* Skills */}
       <EditableSection
         title="Skills"
-        icon={<Wrench className="h-4 w-4 text-indigo-300" />}
+        icon={<Wrench className="h-4 w-4 text-primary" />}
         count={form.skills.length}
         onAdd={addSkill}
       >
@@ -598,7 +605,7 @@ export function EditableExtractedResume({
               <Input
                 value={skill}
                 onChange={(event) => updateSkill(index, event.target.value)}
-                className="border-white/10 bg-white/10 text-white"
+                className="border-border bg-card text-foreground"
                 placeholder="Skill"
               />
 
@@ -607,7 +614,7 @@ export function EditableExtractedResume({
                 variant="ghost"
                 size="icon"
                 onClick={() => removeSkill(index)}
-                className="shrink-0 text-red-300 hover:bg-red-500/10"
+                className="shrink-0 text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -623,17 +630,17 @@ export function EditableExtractedResume({
       {/* Certifications */}
       <EditableSection
         title="Certifications"
-        icon={<Medal className="h-4 w-4 text-indigo-300" />}
+        icon={<Medal className="h-4 w-4 text-primary" />}
         count={form.certifications.length}
         onAdd={addCertification}
       >
         {form.certifications.map((item, index) => (
           <div
             key={index}
-            className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4"
+            className="space-y-4 rounded-md border border-border bg-card p-4"
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="font-medium text-white">
+              <p className="font-medium text-foreground">
                 Certification #{index + 1}
               </p>
 
@@ -642,7 +649,7 @@ export function EditableExtractedResume({
                 variant="ghost"
                 size="icon"
                 onClick={() => removeCertification(index)}
-                className="text-red-300 hover:bg-red-500/10"
+                className="text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -683,7 +690,7 @@ export function EditableExtractedResume({
           type="button"
           onClick={() => onSave(form)}
           disabled={isSaving}
-          className="bg-indigo-500 px-6 text-white shadow-xl hover:bg-indigo-400"
+          className="bg-primary px-6 text-foreground shadow-none hover:bg-primary"
         >
           {isSaving ? "Saving Profile..." : "Confirm & Save to Profile"}
         </Button>
@@ -711,7 +718,7 @@ function EditableField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="mt-2 border-white/10 bg-white/10 text-white placeholder:text-slate-500"
+        className="mt-2 border-border bg-card text-foreground placeholder:text-muted-foreground"
       />
     </div>
   );
@@ -731,7 +738,7 @@ function EditableSection({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
+    <Card className="border-border bg-card text-foreground ">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -739,7 +746,7 @@ function EditableSection({
 
             {title}
 
-            <span className="rounded-full bg-white/5 px-2 py-1 text-xs text-slate-400">
+            <span className="rounded-full bg-card px-2 py-1 text-xs text-muted-foreground">
               {count}
             </span>
           </CardTitle>
@@ -749,7 +756,7 @@ function EditableSection({
             variant="outline"
             size="sm"
             onClick={onAdd}
-            className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+            className="border-border bg-card text-foreground hover:bg-card"
           >
             <Plus className="mr-1 h-4 w-4" />
             Add
@@ -764,7 +771,7 @@ function EditableSection({
 
 function EmptyEditableSection({ text }: { text: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-white/10 p-5 text-center text-sm text-slate-500">
+    <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
       {text}
     </div>
   );

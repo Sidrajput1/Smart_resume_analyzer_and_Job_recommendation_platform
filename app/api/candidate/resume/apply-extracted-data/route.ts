@@ -154,6 +154,7 @@ function normalizeString(value: unknown): string | null {
 
 export async function POST(request: Request) {
   try {
+    console.log("step - 1 is ok")
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
@@ -181,6 +182,8 @@ export async function POST(request: Request) {
         },
       );
     }
+
+    console.log("step - 2 is ok")
 
     const personal = data.personal ?? {};
 
@@ -243,7 +246,8 @@ export async function POST(request: Request) {
     const nextHeadline = candidate.headline ?? firstExperienceRole ?? null;
 
     const nextBio = summary ?? candidate.bio ?? null;
-
+    
+    console.log("step - 3 is ok")
     const uniqueSkills: string[] = Array.from(
       new Set<string>(
         skills
@@ -254,6 +258,7 @@ export async function POST(request: Request) {
       ),
     );
 
+    console.log("step - 4 is ok")
     const result = await db.$transaction(async (tx) => {
       /*
        * ---------------------------------------------------
@@ -277,7 +282,7 @@ export async function POST(request: Request) {
        * 2. Update CandidateProfile
        * ---------------------------------------------------
        */
-
+      console.log("step - 5 is ok")
       const updatedCandidate = await tx.candidateProfile.update({
         where: {
           id: candidate.id,
@@ -492,30 +497,78 @@ export async function POST(request: Request) {
        * 8. Skills
        * ---------------------------------------------------
        */
+      // console.log("step - 6 is ok")
+      // for (const skillName of uniqueSkills) {
+      //   const skill = await tx.skillMaster.upsert({
+      //     where: {
+      //       name: skillName,
+      //     },
 
-      for (const skillName of uniqueSkills) {
-        const skill = await tx.skillMaster.upsert({
-          where: {
-            name: skillName,
-          },
+      //     create: {
+      //       name: skillName,
+      //     },
 
-          create: {
-            name: skillName,
-          },
+      //     update: {},
+      //   });
 
-          update: {},
-        });
+      //   await tx.candidateSkill.create({
+      //     data: {
+      //       candidateProfileId: candidate.id,
 
-        await tx.candidateSkill.create({
-          data: {
-            candidateProfileId: candidate.id,
+      //       skillId: skill.id,
 
-            skillId: skill.id,
+      //       notes: "Imported from resume",
+      //     },
+      //   });
+      // }
 
-            notes: "Imported from resume",
-          },
-        });
-      }
+      console.log("Step 6: Importing candidate skills");
+
+// 1. Normalize and remove duplicate skill names.
+const normalizedSkills = [
+  ...new Set(
+    uniqueSkills
+      .map((skill: string) => skill.trim())
+      .filter(Boolean)
+  ),
+];
+
+if (normalizedSkills.length > 0) {
+  // 2. Insert missing skills in a single database operation.
+  await tx.skillMaster.createMany({
+    data: normalizedSkills.map((name) => ({
+      name,
+    })),
+    skipDuplicates: true,
+  });
+
+  // 3. Fetch all skill IDs with one query.
+  const skills = await tx.skillMaster.findMany({
+    where: {
+      name: {
+        in: normalizedSkills,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  // 4. Create candidate-skill relationships in one query.
+  if (skills.length > 0) {
+    await tx.candidateSkill.createMany({
+      data: skills.map((skill) => ({
+        candidateProfileId: candidate.id,
+        skillId: skill.id,
+        notes: "Imported from resume",
+      })),
+      skipDuplicates: true,
+    });
+  }
+}
+
+console.log("Step 6: Candidate skills imported");
 
       /*
        * ---------------------------------------------------
@@ -549,7 +602,12 @@ export async function POST(request: Request) {
       });
 
       return updatedCandidate;
-    });
+    },
+    {
+    maxWait: 10000,
+    timeout: 20000,
+  }
+  );
 
     return NextResponse.json({
       message: "Resume information saved to your profile successfully",
