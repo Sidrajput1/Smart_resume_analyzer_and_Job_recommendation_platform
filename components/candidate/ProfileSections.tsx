@@ -66,6 +66,7 @@ import {
   useDeleteCandidateSkill,
   useUpdateCandidateSkill,
 } from "@/hooks/useCandidateSkill";
+import { toast } from "sonner";
 
 type DeleteTarget =
   | { key: "experience"; id: string }
@@ -116,6 +117,8 @@ type SkillRecord = {
   isPrimary?: boolean | null;
   notes?: string | null;
 };
+
+type SkillProficiency = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
 
 const formatDate = (value?: string | null) => {
   if (!value) return "N/A";
@@ -1203,8 +1206,17 @@ function SkillsSection() {
     setOpen(true);
   }
 
+  function isSkillProficiency(value: string): value is SkillProficiency {
+    return ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"].includes(value);
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!isSkillProficiency(form.proficiencyLevel)) {
+      toast.error("Invalid skill proficiency");
+      return;
+    }
+
     const payload = {
       name: form.name,
       proficiencyLevel: form.proficiencyLevel,
@@ -1237,7 +1249,7 @@ function SkillsSection() {
 
   return (
     <>
-       <Card className="border-border bg-card text-foreground ">
+      <Card className="border-border bg-card text-foreground ">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -1352,7 +1364,10 @@ function SkillsSection() {
                     setForm((prev) => ({
                       ...prev,
                       proficiencyLevel: event.target.value as
-                        "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT",
+                        | "BEGINNER"
+                        | "INTERMEDIATE"
+                        | "ADVANCED"
+                        | "EXPERT",
                     }))
                   }
                   className="h-10 w-full rounded-md border border-border bg-card px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-400"

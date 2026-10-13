@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validators/auth";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
@@ -12,7 +12,7 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-async function generateUniqueSlug(tx: typeof db, baseName: string) {
+async function generateUniqueSlug(tx: Prisma.TransactionClient, baseName: string) {
   const baseSlug = slugify(baseName);
   let slug = baseSlug;
   let count = 1;

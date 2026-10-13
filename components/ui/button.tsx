@@ -1,6 +1,7 @@
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
+//import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
-
+import { Slot } from "@radix-ui/react-slot";
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -40,19 +41,59 @@ const buttonVariants = cva(
   }
 )
 
+
+type ButtonProps =
+  React.ComponentProps<typeof ButtonPrimitive> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  };
+
 function Button({
   className,
   variant = "default",
   size = "default",
+  asChild = false,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
+  // When asChild is true, render the child element directly.
+  if (asChild) {
+    return (
+      <Slot
+        data-slot="button"
+        className={cn(
+          buttonVariants({ variant, size, className })
+        )}
+        {...(props as React.ComponentProps<typeof Slot>)}
+      />
+    );
+  }
+
+  // Otherwise use the existing Base UI Button.
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(
+        buttonVariants({ variant, size, className })
+      )}
       {...props}
     />
-  )
+  );
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };
+// function Button({
+//   className,
+//   variant = "default",
+//   size = "default",
+//   ...props
+// }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+//   return (
+//     <ButtonPrimitive
+//       data-slot="button"
+//       className={cn(buttonVariants({ variant, size, className }))}
+//       {...props}
+//     />
+//   )
+// }
+
+// export { Button, buttonVariants }

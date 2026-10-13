@@ -144,5 +144,5 @@ export async function GET() {
     );
   }
 
-  return POST();
+  //return POST();
 }
